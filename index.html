@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>物理計算ミス発見くん</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      }
+      
+      /* New simplified app styles */
+      .app {
+        max-width: 720px;
+        margin: 0 auto;
+        padding: 2rem 1rem;
+        color: #1f2937;
+      }
+      .app header {
+        text-align: center;
+        margin-bottom: 2.5rem;
+      }
+      .app header h1 {
+        font-size: 2.25rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+      .app header p {
+        font-size: 1.125rem;
+        color: #4b5563;
+      }
+      .app main {
+        width: 100%;
+      }
+      
+      .analyzing {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 4rem 2rem;
+        background-color: #f9fafb;
+        border-radius: 1.5rem;
+        border: 1px solid #e5e7eb;
+        text-align: center;
+      }
+      .analyzing h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        margin-top: 1.5rem;
+        color: #1f2937;
+      }
+      .analyzing p {
+        color: #6b7280;
+        margin-top: 0.5rem;
+      }
+      
+      .error-message {
+        margin-top: 2rem;
+        padding: 1.5rem;
+        background-color: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 0.75rem;
+        color: #b91c1c;
+        text-align: center;
+        font-weight: 500;
+      }
+      
+      .reset-button {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 0.5rem;
+        width: 100%;
+        max-width: 400px;
+        margin: 2rem auto 0;
+        padding: 1rem;
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: white;
+        background-color: #4f46e5;
+        border: none;
+        border-radius: 0.75rem;
+        cursor: pointer;
+        transition: background-color 0.2s ease, transform 0.2s ease;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+      }
+      .reset-button:hover {
+        background-color: #4338ca;
+        transform: translateY(-2px);
+      }
+
+
+      /* styles/MultiImageUploader.css */
+      .multi-image-uploader {
+        width: 100%;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #f9fafb;
+        border-radius: 1.5rem;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        border: 1px solid #e5e7eb;
+      }
+      .dark .multi-image-uploader {
+        background-color: rgba(17, 24, 39, 0.5); /* bg-gray-900/50 */
+        border-color: #374151; /* dark:border-gray-700 */
+      }
+
+      .multi-image-uploader h3 {
+        font-size: 1.2rem;
+        font-weight: 600;
+        margin-bottom: 8px;
+        text-align: center;
+      }
+
+      .upload-hint {
+        font-size: 0.9rem;
+        color: #6b7280; /* text-gray-500 */
+        text-align: center;
+        margin-bottom: 20px;
+      }
+      .dark .upload-hint {
+        color: #9ca3af; /* dark:text-gray-400 */
+      }
+
+      .upload-sections {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+
+      .upload-section {
+        width: 100%;
+      }
+
+      .upload-label {
+        display: block;
+        cursor: pointer;
+      }
+
+      .upload-button {
+        background: rgba(59, 130, 246, 0.1);
+        border: 2px dashed rgba(59, 130, 246, 0.3);
+        border-radius: 12px;
+        padding: 20px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: all 0.2s;
+        position: relative;
+      }
+
+      .upload-button:hover {
+        background: rgba(59, 130, 246, 0.2);
+        border-color: rgba(59, 130, 246, 0.5);
+      }
+
+      .upload-icon {
+        font-size: 1.5rem;
+      }
+
+      .upload-text {
+        font-size: 1rem;
+        font-weight: 500;
+        flex: 1;
+      }
+
+      .upload-badge {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+        border-radius: 6px;
+        background: rgba(156, 163, 175, 0.2);
+        color: #4b5563; /* text-gray-600 */
+      }
+      .dark .upload-badge {
+        color: #d1d5db; /* dark:text-gray-300 */
+      }
+      
+      .upload-badge.optional {
+         color: #6b7280; /* text-gray-500 */
+      }
+      .dark .upload-badge.optional {
+        color: #9ca3af; /* dark:text-gray-400 */
+      }
+
+      .uploaded-preview {
+        position: relative;
+        border: 2px solid #3b82f6;
+        border-radius: 12px;
+        overflow: hidden;
+        background: rgba(59, 130, 246, 0.1);
+      }
+
+      .uploaded-preview img {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        display: block;
+      }
+
+      .remove-button {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        background: rgba(239, 68, 68, 0.9);
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        font-size: 1rem;
+        transition: all 0.2s;
+        z-index: 10;
+      }
+
+      .remove-button:hover {
+        background: rgba(239, 68, 68, 1);
+        transform: scale(1.1);
+      }
+
+      .image-label {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        padding: 6px 12px;
+        font-size: 0.85rem;
+        text-align: center;
+      }
+
+      .analyze-button {
+        width: 100%;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 16px;
+        font-size: 1.1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+
+      .analyze-button:hover:not(:disabled) {
+        background: #2563eb;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+      }
+
+      .analyze-button:disabled {
+        background: #9ca3af;
+        cursor: not-allowed;
+      }
+      .dark .analyze-button:disabled {
+        background: #4b5563;
+      }
+
+      .no-image-hint {
+        text-align: center;
+        font-size: 0.9rem;
+        color: #ef4444;
+        margin-top: 12px;
+      }
+
+      @media (max-width: 640px) {
+        .upload-button {
+          padding: 16px;
+        }
+        
+        .uploaded-preview img {
+          height: 100px;
+        }
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.21.0"
+  }
+}
+</script>
+</head>
+  <body class="bg-gray-50 dark:bg-gray-900">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>

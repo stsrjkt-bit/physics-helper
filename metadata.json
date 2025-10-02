@@ -1,0 +1,7 @@
+{
+  "name": "Physics Note Mistake Finder",
+  "description": "An application for Japanese high school students to find calculation mistakes in their physics homework. Users can upload a photo of their notes, and the app uses AI to identify errors and suggest better calculation methods.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
