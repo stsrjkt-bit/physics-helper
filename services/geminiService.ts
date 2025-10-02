@@ -38,6 +38,7 @@ JSON形式で回答:
   "correctiveSuggestion": "より良い解法や防止策。ミスがない場合は賞賛と発展的アドバイス"
 }`;
       break;
+
     case 'explain_solution':
       specificInstruction = `
 <役割>
@@ -65,6 +66,7 @@ JSON形式で回答:
   "correctiveSuggestion": "理解を深めるためのアドバイスと確認のための質問"
 }`;
       break;
+
     case 'validate_approach':
       specificInstruction = `
 <役割>
@@ -97,6 +99,7 @@ JSON形式で回答:
   "correctiveSuggestion": "改善点や別解の提案。正しい場合は更なる工夫の提案"
 }`;
       break;
+
     case 'teach_method':
       specificInstruction = `
 <役割>
@@ -130,42 +133,8 @@ JSON形式で回答:
   "correctiveSuggestion": "自分で解くためのヒントと、類似問題への取り組み方"
 }`;
       break;
-    case 'continue_stuck':case 'partial_credit_check':
-      specificInstruction = `
-<役割>
-あなたは国公立大学2次試験の採点経験がある物理の教員です。
-生徒は自分の答案で部分点がもらえるか不安に思っています。
 
-<採点基準の理解>
-国公立2次試験の記述式では:
-1. 方針点: 正しい物理法則・公式を選択（30-40%）
-2. 式の立て方: 必要な式を正確に記述（20-30%）
-3. 計算過程: 論理的な式変形（10-20%）
-4. 最終解答: 数値と単位の正確性（20-30%）
-5. 図示: 適切な図・グラフ（加点要素）
-
-<分析内容>
-1. 答案がどこまで到達しているか段階評価
-2. 各採点項目での推定得点
-3. 部分点獲得のために不足している要素
-4. 「ここまで書けば○割確保」という具体的な見通し
-5. 採点者視点での改善ポイント
-
-<重要な姿勢>
-- 完答していなくても、評価できる要素を積極的に見つける
-- 推定得点を具体的に（例: 配点15点中8-10点程度）
-- 部分点を確実に取る記述テクニックを伝授
-- 「何を書けば点になるか」を明確に示す
-
-JSON形式で回答:
-{
-  "intentType": "partial_credit_check",
-  "hasError": false,
-  "errorLocation": "到達している段階",
-  "errorExplanation": "現時点での推定得点と評価",
-  "correctiveSuggestion": "部分点を取るための改善策"
-}`;
-      break;
+    case 'continue_stuck':
       specificInstruction = `
 <役割>
 生徒は問題を途中まで解いたが、そこから先が分からなくなっています。
@@ -197,7 +166,39 @@ JSON形式で回答:
   "correctiveSuggestion": "続きを解くためのヒントと考え方（答えは示さない）"
 }`;
       break;
+
+    case 'partial_credit_check':
+      specificInstruction = `
+<役割>
+あなたは国公立大学2次試験の採点経験がある物理の教員です。
+生徒は自分の答案で部分点がもらえるか不安に思っています。
+
+<採点基準の理解>
+国公立2次試験の記述式では:
+1. 方針点: 正しい物理法則・公式を選択（30-40%）
+2. 式の立て方: 必要な式を正確に記述（20-30%）
+3. 計算過程: 論理的な式変形（10-20%）
+4. 最終解答: 数値と単位の正確性（20-30%）
+5. 図示: 適切な図・グラフ（加点要素）
+
+<分析内容>
+1. 答案がどこまで到達しているか段階評価
+2. 各採点項目での推定得点
+3. 部分点獲得のために不足している要素
+4. 「ここまで書けば○割確保」という具体的な見通し
+5. 採点者視点での改善ポイント
+
+JSON形式で回答:
+{
+  "intentType": "partial_credit_check",
+  "hasError": false,
+  "errorLocation": "到達している段階",
+  "errorExplanation": "現時点での推定得点と評価",
+  "correctiveSuggestion": "部分点を取るための改善策"
+}`;
+      break;
   }
+
   return baseInstruction + specificInstruction;
 };
 
@@ -216,7 +217,7 @@ const schema = {
   properties: {
     intentType: {
       type: Type.STRING,
-      description: '生徒が選択した意図。 "check_mistake", "explain_solution", "validate_approach", "teach_method", "continue_stuck" のいずれかになります。',
+      description: '生徒が選択した意図。',
     },
     hasError: {
       type: Type.BOOLEAN,
@@ -224,15 +225,15 @@ const schema = {
     },
     errorLocation: {
       type: Type.STRING,
-      description: 'ミスの具体的な場所。ミスがない場合は空文字列。例: "3行目の運動方程式"',
+      description: 'ミスの具体的な場所。ミスがない場合は空文字列。',
     },
     errorExplanation: {
       type: Type.STRING,
-      description: 'なぜミスなのか、物理的・数学的に丁寧に説明。ミスがない場合は空文字列。',
+      description: 'なぜミスなのか、物理的・数学的に丁寧に説明。',
     },
     correctiveSuggestion: {
       type: Type.STRING,
-      description: 'より良い解法、防止策、賞賛、発展的アドバイスなど、意図に沿った回答。',
+      description: 'より良い解法、防止策、賞賛、発展的アドバイスなど。',
     },
   },
   required: ['intentType', 'hasError', 'errorLocation', 'errorExplanation', 'correctiveSuggestion'],
@@ -293,7 +294,7 @@ export const analyzePhysicsNote = async (
       
       if (parsedJson.intentType !== intent) {
           console.warn(
-              `API returned a mismatched intent type. Expected: ${intent}, Got: ${parsedJson.intentType}. Overriding.`
+              `API returned mismatched intent. Expected: ${intent}, Got: ${parsedJson.intentType}. Overriding.`
           );
           parsedJson.intentType = intent;
       }
